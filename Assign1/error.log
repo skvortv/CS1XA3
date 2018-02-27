@@ -1,0 +1,6 @@
+[1 of 1] Compiling Main             ( test.hs, nothing )
+
+test.hs:3:5:
+    Couldn't match expected type ‘Int’ with actual type ‘[Char]’
+    In the expression: "lol"
+    In an equation for ‘hi’: hi = "lol"
