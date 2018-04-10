@@ -27,7 +27,8 @@ single1 = (cosop exprD) <|> single2
 single2 = (sinop exprD) <|> single3
 single3 = (logop exprD) <|> single4
 single4 = (natExpop exprD) <|> factors
-factors = variables <|> constants
+factors = factors1 <|> matrix
+factors1 = variables <|> constants
 variables = parens exprD <|> var
 
 
@@ -53,7 +54,11 @@ natExpop p = string "e^">> spaces >>  p >>= (\expr -> return $ NatExp expr)
 expop :: Parser (Expr Double -> Expr Double -> Expr Double)
 expop = do {symbol "^"; return (Exp)}
 
-
+matrix :: Parser (Expr Double)
+matrix = do {spaces; 
+             ds <- (matrixparse);
+             spaces;
+          return (Matrix ds) } 
 
 constants :: Parser (Expr Double)
 constants = do {spaces; 
@@ -88,10 +93,12 @@ decimalDigits :: Parser String
 decimalDigits = do { d <- char '.' ;
                      rm <- digits ;
                      return $ d:rm }
-
 parens :: Parser a -> Parser a
-parens p = do { char '(';
+parens p = do { spaces;
+                char '(';
+                spaces;
                 cs <- p;
+                spaces;
                 char ')';
                 return cs }
 
@@ -112,5 +119,30 @@ negDigits = do { neg <- symbol "-" ;
                  dig <- digits ;
                  return (neg ++ dig) }
 
+identifier :: Parser String
+identifier = do { cs <- many1 (alphaNum) ;
+                return cs } 
+
 integer :: Parser Integer
 integer = fmap read $ try negDigits <|> digits
+
+
+row :: Parser [Double]
+row = do {  xs <- sepBy double (symbol ",") ;
+             return xs}
+
+rows :: Parser [Double] -> Parser [[Double]]
+rows p = do {  xs <- sepBy p (symbol ";") ;
+             return xs}
+
+squarebrackets :: Parser a -> Parser a
+squarebrackets p = do { spaces;
+                char '[';
+                spaces;
+                cs <- p;
+                spaces;
+                char ']';
+                return cs }
+
+matrixparse :: Parser [[Double]]
+matrixparse = squarebrackets (rows row)

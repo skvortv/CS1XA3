@@ -10,7 +10,7 @@ module ExprType where
 -- | a datatype for encoding numeric expressions
 data Expr a = Add (Expr a) (Expr a) 
              | Mult (Expr a) (Expr a)
-             |Sub (Expr a) (Expr a) 
+             | Sub (Expr a) (Expr a) 
              | Div (Expr a) (Expr a) 
              | Const a
              | Var String
@@ -18,7 +18,8 @@ data Expr a = Add (Expr a) (Expr a)
              | Sin (Expr a)
              | Log (Expr a)
              | Exp (Expr a) (Expr a)
-             |NatExp (Expr a)
+             | NatExp (Expr a)
+             | Matrix [[a]]
     deriving Eq
 {- getVars
 -----------------------------------

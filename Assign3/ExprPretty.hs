@@ -17,3 +17,4 @@ instance (Show a) => Show (Expr a) where
     show (Exp e1 e2) = parens (show e1) ++ " !^ " ++ parens (show e2)
     show (Sub e1 e2) = parens (show e1) ++ " !- " ++ parens (show e2)
     show (Div e1 e2) = parens (show e1) ++ " !/ " ++ parens (show e2)
+    show (Matrix e1) ="matrix "++ parens (show e1)
