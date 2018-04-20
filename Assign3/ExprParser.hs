@@ -1,24 +1,39 @@
-module ExprParser (parseExprDouble, parseExprFloat) where 
+{-|
+Module : ExprParser
+Description : This module is used to parse certain strings in Expr types. Details on the syntax is written below. 
+              The parser will treat all numbers as doubles.
+Copyright    : (c) Seva Skvortsov @2018
+License      : WTFPL
+Maintainer   : seva.sk@gmail.com
+Stability    : experimental
+Portability  : POSIX -}
+
+
+module ExprParser (parseExprDouble) where 
 
 import Text.Parsec
 import Text.Parsec.String
 
 import ExprType
--- | parses an expression into Expr Doubl
--- takes a string with + - * / ^ e^  Cos , Sin, Log  and variables (only letters) and returns my expression type representation of that string no padding at beginning 
+
+{-| parses an expression into Expr Double. The syntax for parser are as follows. + to add, - to subtract, / to divide, * to multiply, 
+            ^ for exponentiation, cos for cosine, sin for sin, log for natural logarithm, e^ for natural exponential, any combination of alphabetical characters
+            for a variable (expect those previously listed), any real numbers for constants, [] to indicate a matrix,
+            , to seperate values in a row of a matrix, ; to seperate rows of a matrix, () to specify order of operations.  Some Examples of valid inputs :
+            "5+2^(2-5)"
+            "5.223/(x*2)"
+            "e^23"
+            "log(dsafa/2)"
+            "cos(sin(5.0-x))"
+            "5*[2,3,4;1,2,3;2,3,4]"
+               -}  
 parseExprDouble :: String -- ^ The string to be parsed
                  -> Expr Double -- ^ The resulting parsed expression
 
 parseExprDouble ss = case parse exprD "" ss of 
                      Left err -> error $ "Parse Error: " ++ show err
                      Right val -> val 
-
-parseExprFloat :: String -> Expr Float
-parseExprFloat ss = case parse exprF "" ss of 
-                     Left err -> error $ "Parse Error: " ++ show err
-                     Right val -> val 
-
-
+-- | exprD is the expression double parser
 exprD :: Parser (Expr Double)
 exprD = terms `chainl1` addop 
 terms = single `chainl1` mulop
@@ -31,41 +46,41 @@ factors = factors1 <|> matrix
 factors1 = variables <|> constants
 variables = parens exprD <|> var
 
-
+-- | parser that parses addition and subtraction operations. Parses + and -
 addop :: Parser (Expr Double -> Expr Double -> Expr Double)
 addop = do { symbol "+"; 
             return (Add)} <|> do { symbol "-"; return (Sub) }
-
+-- | parser that parses multiplication and divition operations. Parses * and - 
 mulop :: Parser (Expr Double -> Expr Double -> Expr Double)
 mulop = do { symbol "*"; return (Mult)} <|> do{ symbol "/"; return (Div) }
-
+-- | parser that parses the cos operation. Parses cos
 cosop :: Parser (Expr Double) -> Parser (Expr Double)
 cosop p =string "Cos" >> spaces >>  p >>= (\expr -> return $ Cos expr )
-
+-- | parser that parses the sin operation. Parses sin
 sinop :: Parser (Expr Double) -> Parser (Expr Double)
 sinop p = string "Sin" >> spaces >>  p >>= (\expr -> return $ Sin expr)
-
+-- | parser that parses the natural log operation. Parses log 
 logop :: Parser (Expr Double) -> Parser (Expr Double)
 logop p = string "Log">> spaces >>  p >>= (\expr -> return $ Log expr)
-
+-- | parser that parses the natural exponential operation. Parses e^
 natExpop :: Parser (Expr Double) -> Parser (Expr Double)
 natExpop p = string "e^">> spaces >>  p >>= (\expr -> return $ NatExp expr)
-
+-- | parser that parses the exponential operation. Parses ^
 expop :: Parser (Expr Double -> Expr Double -> Expr Double)
 expop = do {symbol "^"; return (Exp)}
-
+-- | parser that parses a matix. Parses {}, , , ;
 matrix :: Parser (Expr Double)
 matrix = do {spaces; 
              ds <- (matrixparse);
              spaces;
           return (Matrix ds) } 
-
+-- | parser that parses constants. Parses any real number
 constants :: Parser (Expr Double)
 constants = do {spaces; 
                 ds <- (double);
                 spaces;
           return (Const ds) } 
-
+-- | parser that parses variables. Parses letters
 var :: Parser (Expr Double)
 var = do {spaces;
           cs <- many1 (letter);
@@ -76,10 +91,9 @@ var = do {spaces;
 exprF :: Parser (Expr Float)
 exprF = error "Do this"
 
-{- ------------------------------------------------------------------------------------------------------------
- - Utility Combinators
- - ------------------------------------------------------------------------------------------------------------
- -}
+
+-- * Utility Combinators
+
 
 
 double :: Parser Double
