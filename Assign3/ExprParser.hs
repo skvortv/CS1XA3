@@ -1,7 +1,8 @@
 {-|
 Module : ExprParser
 Description : This module is used to parse certain strings in Expr types. Details on the syntax is written below. 
-              The parser will treat all numbers as doubles.
+              The parser will treat all numbers as doubles. Using parseExprDouble on a string with proper syntax will
+              convert the string into the corresponding 'Expr'. 
 Copyright    : (c) Seva Skvortsov @2018
 License      : WTFPL
 Maintainer   : seva.sk@gmail.com
@@ -17,10 +18,11 @@ import Text.Parsec.String
 import ExprType
 
 {-| parses an expression into Expr Double. The syntax for parser are as follows. + to add, - to subtract, / to divide, * to multiply, 
-            ^ for exponentiation, cos for cosine, sin for sin, log for natural logarithm, e^ for natural exponential, any combination of alphabetical characters
-            for a variable (expect those previously listed), any real numbers for constants, [] to indicate a matrix,
-            , to seperate values in a row of a matrix, ; to seperate rows of a matrix, () to specify order of operations.  Some Examples of valid inputs :
-            "5+2^(2-5)"
+            ^ for exponentiation, Cos for cosine, Sin for sin, Log for natural logarithm, e^ for natural exponential, any combination of alphabetical characters
+            for a variable (expect those previously listed such as Sin), any real numbers for constants, '[]' to indicate a matrix,
+            ',' to seperate values in a row of a matrix, ';' to seperate rows of a matrix, () to specify order of operations.  
+             Some Examples of valid inputs :
+            "5+2^(2-5)" 
             "5.223/(x*2)"
             "e^23"
             "log(dsafa/2)"
@@ -68,7 +70,7 @@ natExpop p = string "e^">> spaces >>  p >>= (\expr -> return $ NatExp expr)
 -- | parser that parses the exponential operation. Parses ^
 expop :: Parser (Expr Double -> Expr Double -> Expr Double)
 expop = do {symbol "^"; return (Exp)}
--- | parser that parses a matix. Parses {}, , , ;
+-- | parser that parses a matix. Parses "[]", "," ";" ;
 matrix :: Parser (Expr Double)
 matrix = do {spaces; 
              ds <- (matrixparse);
@@ -87,14 +89,7 @@ var = do {spaces;
           spaces;
           return (Var cs) }
 
-
-exprF :: Parser (Expr Float)
-exprF = error "Do this"
-
-
 -- * Utility Combinators
-
-
 
 double :: Parser Double
 double = (fmap read $ doubleDigits)

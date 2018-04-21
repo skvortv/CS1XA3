@@ -1,6 +1,8 @@
 {-|
 Module : ExprPretty
-Description :  Contains the Show instance of the 'Expr' Data type. Makes the type much easier to read
+Description :  Contains the Show instance of the 'Expr' Data type. Makes the type much easier to read. Add shows !+ , Mult shows !*, Var x shows var x,
+               Const x shows val x, Cos shows cos, Sin shows sin, NatExp shows e^, Log shows Log, Exp show !^, Sub shows !-, Div shows !/, and Matrix
+               prints each row on a seperate line to form a matrix.
 Copyright    : (c) Seva Skvortsov @2018
 License      : WTFPL
 Maintainer   : seva.sk@gmail.com

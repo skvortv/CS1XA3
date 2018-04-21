@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-|
 Module : ExprDiff
-Description :  Contains a typeclass definitions for methods for the Expr type
+Description :  Contains a typeclass definitions and methods for the 'Expr' type
 Copyright    : (c) Seva Skvortsov @2018
 License      : WTFPL
 Maintainer   : seva.sk@gmail.com
@@ -16,7 +16,7 @@ import ExprType
 import ExprPretty
 
 
--- | This class operates over the 'Expr' Data type, contains definitions for method for the 'Expr'
+-- | This class operates over the 'Expr' Data type, contains definitions and methods for the 'Expr'
 class DiffExpr a where
   -- | Given a dictionary of variable indentifiers and an Expr, evaluate that Expr to a single value
   eval :: Map.Map String a -- ^ Dictionary of indentifiers
@@ -90,7 +90,9 @@ class DiffExpr a where
         -> Expr a -- ^ Resulting Expression
   var x = Var x
 
--- | Is an instance for Floating class number for the class definition DiffExpr. It contains the fuction definitions for eval, partDiff, simplify. Eval does not work on matrices. partDiff does not work for Exp or Matrices
+{- | Is an instance for Floating class number for the class definition DiffExpr. It contains the fuction definitions for eval, partDiff, simplify. Eval 
+     does not work on matrices. partDiff dont not work for matrices and Exp (Just Exp NatExp is fine). PartDiff does not simplify the expression use simplify to
+     make it more readable. -}
 instance (Eq a, Floating a) => DiffExpr a where
   eval vrs (Add e1 e2)  = eval vrs e1 + eval vrs e2
   eval vrs (Mult e1 e2) = eval vrs e1 * eval vrs e2
@@ -116,6 +118,7 @@ instance (Eq a, Floating a) => DiffExpr a where
   simplify vrs (Mult (Const 1) e1) =simplify vrs e1
   simplify vrs (Add e1 (Const 0)) = simplify vrs e1
   simplify vrs (Add (Const 0) e1) = simplify vrs e1
+  simplify vrs (Sub e1 (Const 0)) = simplify vrs e1
   simplify vrs (Exp (e1) (Const 0)) = Const 1
   simplify vrs (Exp (Const 0) e1) = Const 0
 
@@ -217,21 +220,19 @@ instance (Eq a, Floating a) => DiffExpr a where
                              Const x -> Const (exp x)
                              _-> NatExp (simplify vrs e1)
 
-
-
   partDiff t (Var x) | x == t = Const 1
                      | otherwise = (Const 0)
   partDiff _ (Const _) = Const 0
-  partDiff t (Add e1 e2) =(Add (partDiff t e1) (partDiff t e2))
-  partDiff t (Mult e1 e2) = (Add (Mult (partDiff t e1) e2) (Mult e1 (partDiff t e2)))
+  partDiff t (Add e1 e2) = (Add (partDiff t e1) (partDiff t e2))
+  partDiff t (Mult e1 e2) =(Add (Mult (partDiff t e1) e2) (Mult e1 (partDiff t e2)))
   partDiff t (Sub e1 e2) =(Sub (partDiff t e1) (partDiff t e2))
-  partDiff t (Div e1 e2) =(Div (Sub (Mult (partDiff t e1) e2) (Mult e1 (partDiff t e2))) (Exp e2 (Const 2) ))
-  partDiff t (Cos x) =(Mult (Const (-1) ) (Mult (partDiff t x) (Sin x)))
-  partDiff t (Sin x) = (Mult (partDiff t x) (Cos x))
+  partDiff t (Div e1 e2) = (Div (Sub (Mult (partDiff t e1) e2) (Mult e1 (partDiff t e2))) (Exp e2 (Const 2) ))
+  partDiff t (Cos x) = (Mult (Const (-1) ) (Mult (partDiff t x) (Sin x)))
+  partDiff t (Sin x) =(Mult (partDiff t x) (Cos x))
   partDiff t (Log x) =(Div ( partDiff t x) x)
-  partDiff t (NatExp x) = Mult (NatExp x) (partDiff t x)
-  partDiff t (Exp (Const x) e1) = Mult (Exp (Const x) e1) (Log (Const x))
-  partDiff t (Exp e1 (Const x)) = Mult (Const (x)) (Exp e1 (Const (x-1) ) )
+  partDiff t (NatExp x) =(Mult (NatExp x) (partDiff t x))
+  partDiff t (Exp (Const x) e1) =(Mult (Exp (Const x) e1) (Log (Const x)))
+  partDiff t (Exp e1 (Const x)) = (Mult (Const (x)) (Exp e1 (Const (x-1) ) ))
   
 
 -- * Miscellaneous Functions
